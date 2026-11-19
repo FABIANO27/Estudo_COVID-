@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>COVID-19 SRAG: 2025 × 2026</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#14202b;--mut:#5d6b78;--a:#c2410c;--b:#0b7a75;--bd:#e2e6ea;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1419;--card:#18212a;--tx:#e8eef3;--mut:#9aa8b5;--a:#fb923c;--b:#3cc6bd;--bd:#27333e;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1419;--card:#18212a;--tx:#e8eef3;--mut:#9aa8b5;--a:#fb923c;--b:#3cc6bd;--bd:#27333e;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:560px;margin:0 auto;padding:16px 16px 32px}
+h1{font-size:1.35rem;margin:8px 0 2px}.sub{color:var(--mut);font-size:.84rem;margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:12px}
+.card h2{font-size:1rem;margin:0 0 10px}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{padding:6px 4px;text-align:right;border-bottom:1px solid var(--bd)}th:first-child,td:first-child{text-align:left}
+.y25{color:var(--a);font-weight:600}.y26{color:var(--b);font-weight:600}
+.leg{font-size:.8rem;color:var(--mut);margin-bottom:6px}
+svg{width:100%;height:auto;display:block}
+.row{display:flex;align-items:center;gap:6px;font-size:.78rem;margin:4px 0}
+.row span.l{width:34px;color:var(--mut)}.row .bars{flex:1}
+.bars i{display:block;height:9px;border-radius:3px;margin:1px 0}
+.btn{display:block;width:100%;padding:14px;border-radius:10px;border:0;background:var(--b);color:#fff;font-size:1rem;font-weight:600;text-align:center}
+input[type=file]{display:none}
+label.f{margin-top:10px;display:block;font-size:.82rem;color:var(--mut)}
+input[type=number]{width:100%;font-size:1rem;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx)}
+.res{font-size:1rem;margin-top:10px}.calc{font-size:.85rem;margin:6px 0;padding:8px 10px;background:var(--bg);border-radius:8px;border:1px solid var(--bd)}.note{font-size:.76rem;color:var(--mut);margin-top:8px}
+ol{padding-left:18px;margin:6px 0}li{margin:4px 0}code{background:var(--bg);padding:1px 4px;border-radius:4px;font-size:.82em}
+</style>
+</head>
+<body>
+<main>
+<h1>COVID-19 (SRAG): 2025 × 2026</h1>
+<p class="sub">SRAG por covid-19 (hospitalizados), base SIVEP-Gripe de 16/11/2026, semanas 1 a 47. Dados preliminares; a semana 47 de 2026 ainda está incompleta.</p>
+
+<div class="card" id="load">
+  <h2>Atualizar dados</h2>
+  <p class="note" style="margin-top:0">Os números abaixo já vêm da base de 16/11/2026. Para usar uma base mais nova, carregue outro resumo.json.</p>
+  <label class="btn" for="fi">Carregar outro resumo.json</label>
+  <input id="fi" type="file" accept=".json,application/json">
+  <div class="note" id="msg"></div>
+</div>
+
+<div id="app" hidden>
+  <div class="card"><h2>Resumo</h2><div class="leg"><span class="y25">■ 2025</span> &nbsp; <span class="y26">■ 2026</span> &nbsp; <span id="flt"></span></div><div id="tb"></div>
+  <details style="margin-top:10px;font-size:.84rem"><summary style="font-weight:600">Definições</summary>
+  <ul style="padding-left:18px;margin:8px 0 0">
+    <li><b>Casos:</b> registros de SRAG hospitalizada com classificação final “SRAG por covid-19” (CLASSI_FIN = 5), semanas 1 a 47.</li>
+    <li><b>Internados:</b> casos com internação registrada (HOSPITAL = 1).</li>
+    <li><b>Em UTI:</b> internados que passaram por UTI (UTI = 1).</li>
+    <li><b>Óbitos:</b> evolução “óbito” (EVOLUCAO = 2). Não inclui óbito por outras causas.</li>
+    <li><b>Vent. invasiva:</b> uso de suporte ventilatório invasivo (SUPORT_VEN = 1).</li>
+    <li><b>Letalidade:</b> óbitos ÷ casos × 100. Casos ainda sem desfecho entram no total, então o valor pode estar subestimado.</li>
+  </ul></details></div>
+  <div class="card"><h2>Casos por semana epidemiológica</h2><div id="wk"></div></div>
+  <div class="card"><h2>Casos por faixa etária</h2><div id="fx"></div></div>
+  <div class="card"><h2>Maiores UFs (casos)</h2><div id="uf"></div></div>
+  <div class="card"><h2>Simulador | Impacto Financeiro</h2>
+    <p class="note" style="margin-top:0"><b>Como o cálculo funciona:</b> o custo estimado de cada ano soma duas partes. <b>Enfermaria</b> = nº de internados × dias médios em enfermaria × diária de enfermaria. <b>UTI</b> = nº de pacientes em UTI × dias médios em UTI × diária de UTI. Os números de internados e de pacientes em UTI vêm da tabela Resumo (SIVEP-Gripe); os dias e as diárias são os campos abaixo, que você pode alterar.</p>
+    <label class="f">Diária enfermaria (R$) – valor pago pelo SUS<input id="ce" type="number" inputmode="decimal" value="89"></label>
+    <label class="f">Diária UTI (R$) – custo FHEMIG<input id="cu" type="number" inputmode="decimal" value="3445"></label>
+    <label class="f">Média de dias em enfermaria (por internado)<input id="de" type="number" inputmode="decimal" value="8"></label>
+    <label class="f">Média de dias em UTI (por paciente em UTI)<input id="du" type="number" inputmode="decimal" value="8.9"></label>
+    <div class="res" id="cost"></div>
+    <div class="note"><b>Médias de dias (calculadas na base):</b> enfermaria 8,0 (2025) e 8,1 (2026); UTI 9,1 (2025) e 8,1 (2026). Os campos já vêm com a média dos dois anos (UTI: 8,9). Enfermaria = tempo total de internação menos os dias de UTI. Medianas são menores (4 dias em enfermaria e 5 em UTI): poucos casos longos puxam a média para cima. Só entram casos com datas de internação e desfecho preenchidas (14.389 de 16.038 internados em 2025 e 4.620 de 5.582 em 2026); casos ainda internados ficam de fora.</div>
+    <div class="note">A base não tem custos. Estimativa = internados × dias de enfermaria × diária + pacientes em UTI × dias de UTI × diária. <b>Valores de referência.</b> <b>UTI – custo FHEMIG:</b> R$ 3.445 por paciente/dia, média ponderada pelos pacientes/dia dos hospitais HJK, HRJP e HEM (UTI covid, 2020), calculada a partir das Tabelas 2, 6 e 8 de Alemão et al., Braz. J. Health Rev. 5(2):5661-5686, 2022 (<a href="https://ojs.brazilianjournals.com.br/ojs/index.php/BJHR/article/view/45925">artigo</a>). O estudo é de hospitais estaduais de Minas e não traz custo de enfermaria. <b>Enfermaria – valor pago pelo SUS:</b> R$ 89 por dia, média do Sudeste (ES, MG, RJ e SP) no SIH/SUS, jan/2025 a set/2026, em 1.654 internações com diagnóstico principal B34.2 (valor total pago menos valor de UTI, dividido pelos dias fora da UTI). O SUS paga a covid por valor fechado por internação, o que explica o valor baixo. Atenção: as duas referências têm bases diferentes (custo na UTI, valor pago na enfermaria), então o total estimado subestima o custo real da enfermaria.</div>
+  </div>
+</div>
+</main>
+<script>
+(function(){
+var EMB={"anos":{"2025":{"casos":16701,"internados":16038,"uti":5266,"int_enf":10772,"obitos":2616,"vent_invasiva":2254,"semanal":{"1":485,"2":892,"3":738,"4":735,"5":621,"6":586,"7":648,"8":717,"9":689,"10":501,"11":412,"12":338,"13":226,"14":170,"15":149,"16":116,"17":137,"18":116,"19":139,"20":119,"21":125,"22":149,"23":125,"24":130,"25":137,"26":141,"27":122,"28":135,"29":190,"30":203,"31":247,"32":298,"33":346,"34":432,"35":506,"36":469,"37":475,"38":479,"39":459,"40":472,"41":381,"42":394,"43":369,"44":365,"45":368,"46":328,"47":322},"faixa":{"0-4":3850,"5-11":563,"12-19":315,"20-39":1324,"40-59":2021,"60-79":4539,"80+":4089},"uf":{"AC":128,"AL":151,"AM":290,"AP":68,"BA":658,"CE":450,"DF":739,"ES":155,"GO":686,"MA":144,"MG":1609,"MS":298,"MT":283,"PA":272,"PB":361,"PE":247,"PI":132,"PR":1460,"RJ":1064,"RN":142,"RO":125,"RR":48,"RS":863,"SC":609,"SE":135,"SP":5441,"TO":139}},"2026":{"casos":5888,"internados":5582,"uti":1758,"int_enf":3824,"obitos":753,"vent_invasiva":741,"semanal":{"2":106,"3":211,"4":249,"5":248,"6":190,"7":233,"8":276,"9":318,"10":272,"11":268,"12":210,"13":172,"14":135,"15":144,"16":126,"17":129,"18":89,"19":107,"20":104,"21":90,"22":109,"23":73,"24":119,"25":112,"26":81,"27":80,"28":59,"29":62,"30":60,"31":41,"32":40,"33":37,"34":46,"35":49,"36":60,"37":58,"38":71,"39":70,"40":127,"41":66,"42":127,"43":119,"44":148,"45":197,"46":198,"47":2},"faixa":{"0-4":1579,"5-11":255,"12-19":115,"20-39":458,"40-59":710,"60-79":1480,"80+":1291},"uf":{"AC":49,"AL":52,"AM":73,"AP":17,"BA":197,"CE":261,"DF":190,"ES":61,"GO":216,"MA":79,"MG":584,"MS":59,"MT":96,"PA":160,"PB":98,"PE":64,"PI":21,"PR":429,"RJ":579,"RN":52,"RO":28,"RR":33,"RS":385,"SC":271,"SE":30,"SP":1779,"TO":23}}},"filtro":"SRAG por covid-19 (CLASSI_FIN=5)","semanas_alinhadas":true};
+var D=null,$=function(i){return document.getElementById(i)};
+var f=function(n){return Math.round(n).toLocaleString("pt-BR")};
+var C={"2025":"var(--a)","2026":"var(--b)"};
+
+$("fi").addEventListener("change",function(e){
+  var file=e.target.files[0];if(!file)return;
+  var r=new FileReader();
+  r.onload=function(){try{D=JSON.parse(r.result);if(!D.anos)throw 0;show();$("msg").textContent="";}
+    catch(x){$("msg").textContent="Arquivo inválido. Use o resumo.json gerado pelo script."}};
+  r.readAsText(file);
+});
+
+function yrs(){return Object.keys(D.anos).sort()}
+
+function table(){
+  var Y=yrs(),rows=[["Casos","casos"],["Internados","internados"],["Em UTI","uti"],["Óbitos","obitos"],["Vent. invasiva","vent_invasiva"]];
+  var h="<table><tr><th></th>"+Y.map(function(y){return '<th class="y'+y.slice(2)+'">'+y+"</th>"}).join("")+"</tr>";
+  rows.forEach(function(r){h+="<tr><td>"+r[0]+"</td>"+Y.map(function(y){return "<td>"+f(D.anos[y][r[1]])+"</td>"}).join("")+"</tr>"});
+  h+="<tr><td>Letalidade</td>"+Y.map(function(y){var a=D.anos[y];return "<td>"+(a.casos?(a.obitos/a.casos*100).toFixed(1).replace(".",","):"–")+"%</td>"}).join("")+"</tr></table>";
+  $("tb").innerHTML=h;
+  $("flt").textContent=D.filtro+(D.semanas_alinhadas?" · mesmas semanas":"");
+}
+
+function lines(){
+  var Y=yrs(),W=340,H=180,p=28,mx=1,maxw=1;
+  Y.forEach(function(y){for(var k in D.anos[y].semanal){mx=Math.max(mx,D.anos[y].semanal[k]);maxw=Math.max(maxw,+k)}});
+  var s='<svg viewBox="0 0 '+W+" "+H+'">';
+  for(var i=0;i<=3;i++){var yy=H-p-(H-p-8)*i/3;s+='<line x1="'+p+'" x2="'+W+'" y1="'+yy+'" y2="'+yy+'" stroke="var(--bd)"/><text x="0" y="'+(yy+4)+'" font-size="10" fill="var(--mut)">'+f(mx*i/3)+"</text>"}
+  s+='<text x="'+p+'" y="'+(H-6)+'" font-size="10" fill="var(--mut)">sem 1</text><text x="'+(W-34)+'" y="'+(H-6)+'" font-size="10" fill="var(--mut)">sem '+maxw+"</text>";
+  Y.forEach(function(y){var pts=[];for(var w=1;w<=maxw;w++){var v=D.anos[y].semanal[w];if(v==null)continue;
+    pts.push((p+(W-p-6)*(w-1)/Math.max(1,maxw-1)).toFixed(1)+","+(H-p-(H-p-8)*v/mx).toFixed(1))}
+    s+='<polyline fill="none" stroke="'+C[y]+'" stroke-width="2" points="'+pts.join(" ")+'"/>'});
+  $("wk").innerHTML=s+"</svg>";
+}
+
+function groups(el,key,top){
+  var Y=yrs(),keys={};
+  Y.forEach(function(y){for(var k in D.anos[y][key])keys[k]=(keys[k]||0)+D.anos[y][key][k]});
+  var ks=Object.keys(keys);
+  if(top){ks.sort(function(a,b){return keys[b]-keys[a]});ks=ks.slice(0,top)}
+  else{var o=["0-4","5-11","12-19","20-39","40-59","60-79","80+"];ks.sort(function(a,b){return o.indexOf(a)-o.indexOf(b)})}
+  var mx=1;Y.forEach(function(y){ks.forEach(function(k){mx=Math.max(mx,D.anos[y][key][k]||0)})});
+  var h="";
+  ks.forEach(function(k){h+='<div class="row"><span class="l">'+k+'</span><div class="bars">'+
+    Y.map(function(y){var v=D.anos[y][key][k]||0;return '<i style="width:'+(v/mx*100).toFixed(1)+"%;background:"+C[y]+'" title="'+f(v)+'"></i>'}).join("")+
+    '</div><span style="width:56px;text-align:right">'+Y.map(function(y){return f(D.anos[y][key][k]||0)}).join("<br>")+"</span></div>"});
+  $(el).innerHTML=h;
+}
+
+function cost(){
+  var g=function(i){return parseFloat($(i).value)||0},Y=yrs(),h="";
+  Y.forEach(function(y){var a=D.anos[y],c=a.internados*g("de")*g("ce")+a.uti*g("du")*g("cu");
+    var fd=function(n){return n.toLocaleString("pt-BR",{maximumFractionDigits:1})},ce=a.internados*g("de")*g("ce"),cu=a.uti*g("du")*g("cu");
+    h+='<div style="margin-bottom:12px"><b class="y'+y.slice(2)+'">'+y+'</b>'
+     +'<div class="calc"><b>Enfermaria</b><br>'+f(a.internados)+' internados × '+fd(g("de"))+' dias × R$ '+f(g("ce"))+' = <b>R$ '+f(ce)+'</b></div>'
+     +'<div class="calc"><b>UTI</b><br>'+f(a.uti)+' pacientes em UTI × '+fd(g("du"))+' dias × R$ '+f(g("cu"))+' = <b>R$ '+f(cu)+'</b></div>'
+     +'<div class="calc"><b>Total estimado</b><br>R$ '+f(ce)+' + R$ '+f(cu)+' = <b>R$ '+f(c)+'</b></div></div>'});
+  $("cost").innerHTML=h;
+}
+
+function show(){$("app").hidden=false;table();lines();groups("fx","faixa",0);groups("uf","uf",10);cost()}
+["ce","cu","de","du"].forEach(function(i){$(i).addEventListener("input",function(){if(D)cost()})});
+D=EMB;show();
+})();
+</script>
+</body>
+</html>
